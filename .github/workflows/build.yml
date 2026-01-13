@@ -65,7 +65,7 @@ jobs:
           tar xzf zstd-1.5.6.tar.gz
           mv zstd-1.5.6 zstd
           cd zstd/lib
-          make -j$(nproc) libzstd.a libzstd.so
+          make -j$(nproc) lib-static
 
       - name: Build Debian package
         run: |
