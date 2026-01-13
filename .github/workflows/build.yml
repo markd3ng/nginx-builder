@@ -1,96 +1,60 @@
-name: Build Nginx Debian Package
+name: Nginx Builder
 
 on:
-  workflow_dispatch:
   push:
-    branches: [ master ]
-    paths:
-      - 'debian/**'
-      - 'src/**'
-      - 'auto/**'
-      - '.github/workflows/**'
+    branches: [ "master" ]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 1' # Weekly updates
+
+permissions:
+  contents: write # Needed for creating releases
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: debian:trixie
-
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            suffix: amd64
+          - platform: linux/arm64
+            suffix: arm64
+    
     steps:
-      - name: Install build dependencies
-        run: |
-          apt-get update
-          apt-get install -y \
-            git \
-            build-essential \
-            devscripts \
-            debhelper \
-            quilt \
-            libpcre2-dev \
-            libhiredis-dev \
-            libmhash-dev \
-            libjson-c-dev \
-            po-debconf \
-            zlib1g-dev \
-            libssl-dev \
-            libgd-dev \
-            libgeoip-dev \
-            libmaxminddb-dev \
-            libxslt1-dev \
-            libperl-dev \
-            libpam0g-dev \
-            libluajit-5.1-dev \
-            libexpat1-dev \
-            libbrotli-dev \
-            luajit \
-            wget \
-            ca-certificates
-
-      - name: Checkout nginx-source
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Download and prepare OpenSSL
+      
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Build and Export
         run: |
-          cd ..
-          wget https://github.com/openssl/openssl/releases/download/openssl-3.4.1/openssl-3.4.1.tar.gz
-          tar xzf openssl-3.4.1.tar.gz
-          mv openssl-3.4.1 openssl
-
-      - name: Download and prepare Zstd
+          docker buildx build \
+            --platform ${{ matrix.platform }} \
+            --output type=local,dest=./output \
+            .
+      
+      - name: Rename Artifact
         run: |
-          cd ..
-          wget https://github.com/facebook/zstd/releases/download/v1.5.6/zstd-1.5.6.tar.gz
-          tar xzf zstd-1.5.6.tar.gz
-          mv zstd-1.5.6 zstd
-          cd zstd/lib
-          make -j$(nproc)
-          ls -la libzstd.a
-
-      - name: Build Debian package
-        run: |
-          dpkg-buildpackage -us -uc -b
-
-      - name: List built packages
-        run: |
-          ls -la ../*.deb
-
-      - name: Upload deb artifacts
+          mv ./output/nginx-custom.tar.gz ./output/nginx-custom-linux-${{ matrix.suffix }}.tar.gz
+          
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: nginx-debs
-          path: ../*.deb
-          retention-days: 30
-
-      - name: Create Release
+          name: nginx-custom-${{ matrix.suffix }}
+          path: ./output/*.tar.gz
+          
+      - name: Publish to Release (Rolling)
+        # Only publish specific branches to prevent accidental releases from PRs
         if: github.ref == 'refs/heads/master'
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ github.run_number }}
-          name: Build ${{ github.run_number }}
-          files: ../*.deb
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: rolling
+          files: ./output/*.tar.gz
+          prerelease: true
+          fail_on_unmatched_files: true
