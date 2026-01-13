@@ -2,34 +2,14 @@
 export DH_VERBOSE=1
 
 export DEB_BUILD_MAINT_OPTIONS=hardening=+all
+export ZSTD_INC=$(CURDIR)/../zstd/lib
+export ZSTD_LIB=$(CURDIR)/../zstd/lib
+
 debian_cflags:=$(shell dpkg-buildflags --get CFLAGS) -fPIC $(shell dpkg-buildflags --get CPPFLAGS)
 debian_ldflags:=$(shell dpkg-buildflags --get LDFLAGS) -fPIC
 
 FLAVOURS := core light extras
-DYN_MODS := \
-	http-auth-pam \
-	http-cache-purge \
-	http-dav-ext \
-	http-echo \
-	http-fancyindex \
-	http-geoip \
-	http-geoip2 \
-	http-headers-more-filter \
-	http-image-filter \
-	http-ipdb \
-	http-lua \
-	http-ndk \
-	http-perl \
-	http-subs-filter \
-	http-uploadprogress \
-	http-upstream-fair \
-	http-xslt-filter \
-	mail \
-	nchan \
-	rtmp \
-	stream \
-	stream-geoip \
-	stream-geoip2
+DYN_MODS := 
 
 MODULESDIR = $(CURDIR)/debian/modules
 SBMODULESDIR = $(CURDIR)/sb-modules
@@ -129,6 +109,7 @@ extras_configure_flags := \
 			--add-module=$(SBMODULESDIR)/ngx_brotli \
 			--add-module=$(SBMODULESDIR)/zstd-nginx-module \
 			--add-module=$(SBMODULESDIR)/nginx-acme \
+			--add-module=$(SBMODULESDIR)/ngx_http_ipdb_module \
 			--add-module=$(MODULESDIR)/http-headers-more-filter \
 			--add-module=$(MODULESDIR)/http-auth-pam \
 			--add-module=$(MODULESDIR)/http-cache-purge \
@@ -137,7 +118,7 @@ extras_configure_flags := \
 			--add-module=$(MODULESDIR)/http-echo \
 			--add-module=$(MODULESDIR)/http-fancyindex \
 			--add-module=$(MODULESDIR)/http-geoip2 \
-			--add-module=$(SBMODULESDIR)/ngx_http_ipdb_module \
+			--add-module=$(MODULESDIR)/stream-geoip2 \
 			--add-module=$(MODULESDIR)/nchan \
 			--add-module=$(MODULESDIR)/http-lua \
 			--add-module=$(MODULESDIR)/rtmp \
