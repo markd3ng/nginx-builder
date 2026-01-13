@@ -1,5 +1,6 @@
 #!/bin/bash
-set -e
+# Enable debug printing
+set -ex
 
 # --- Configuration ---
 # Colors
@@ -67,6 +68,13 @@ clean_download() {
             # Handle tarball naming variations if needed
             ;;
     esac
+    
+    # Verify download
+    if [ ! -d "$dir" ]; then
+        log "${RED}ERROR: Failed to download $dir. Directory not found!${NC}"
+        ls -la
+        exit 1
+    fi
 }
 
 # Core
@@ -79,8 +87,8 @@ cd openssl && git fetch --tags && git checkout openssl-${OPENSSL_VERSION} && cd 
 
 # Deps (Tarballs for stability/compat with Nginx auto-build)
 log "Downloading PCRE2 & Zlib..."
-wget -qO- https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${PCRE2_VERSION}/pcre2-${PCRE2_VERSION}.tar.gz | tar xz
-wget -qO- https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.gz | tar xz
+clean_download "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${PCRE2_VERSION}/pcre2-${PCRE2_VERSION}.tar.gz" "pcre2-${PCRE2_VERSION}"
+clean_download "https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.gz" "zlib-${ZLIB_VERSION}"
 
 # Modules (Git Clones)
 log "Downloading Modules..."
