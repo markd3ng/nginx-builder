@@ -79,13 +79,15 @@ cd ${SRC_DIR}
 
 # Core
 clean_download "https://github.com/nginx/nginx.git" "nginx" 
-# Switch nginx to specific tag
-cd nginx && git fetch --tags && git checkout release-${NGINX_VERSION} && cd ..
+# Switch nginx to specific tag (use subshell to avoid changing main script directory)
+(cd nginx && git fetch --tags && git checkout release-${NGINX_VERSION})
 
 clean_download "https://github.com/openssl/openssl.git" "openssl"
-cd openssl && git fetch --tags && git checkout openssl-${OPENSSL_VERSION} && cd ..
+(cd openssl && git fetch --tags && git checkout openssl-${OPENSSL_VERSION})
 
 # Deps (Tarballs for stability/compat with Nginx auto-build)
+# Explicitly ensure we are in SRC_DIR
+cd ${SRC_DIR}
 log "Downloading PCRE2 & Zlib..."
 clean_download "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${PCRE2_VERSION}/pcre2-${PCRE2_VERSION}.tar.gz" "pcre2-${PCRE2_VERSION}"
 clean_download "https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.gz" "zlib-${ZLIB_VERSION}"
