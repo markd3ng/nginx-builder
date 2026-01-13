@@ -24,11 +24,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpcre2-dev \
     libssl-dev \
     zlib1g-dev \
+    dos2unix \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy Build Script
 COPY build.sh /build.sh
-RUN chmod +x /build.sh
+RUN dos2unix /build.sh && chmod +x /build.sh
 
 # Execute Build
 # This script manages versions, downloads, and compilation
