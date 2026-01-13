@@ -94,7 +94,6 @@ extras_configure_flags := \
 			--add-module=$(MODULESDIR)/http-echo \
 			--add-module=$(MODULESDIR)/http-fancyindex \
 			--add-module=$(MODULESDIR)/http-geoip2 \
-			--add-module=$(MODULESDIR)/stream-geoip2 \
 			--add-module=$(MODULESDIR)/nchan \
 			--add-module=$(MODULESDIR)/http-lua \
 			--add-module=$(MODULESDIR)/rtmp \
