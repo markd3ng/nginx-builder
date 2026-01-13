@@ -111,40 +111,40 @@ extras_configure_flags := \
 			$(common_configure_flags) \
 			--with-http_addition_module \
 			--with-http_flv_module \
-			--with-http_geoip_module=dynamic \
+			--with-http_geoip_module \
 			--with-http_gunzip_module \
 			--with-http_gzip_static_module \
-			--with-http_image_filter_module=dynamic \
+			--with-http_image_filter_module \
 			--with-http_mp4_module \
-			--with-http_perl_module=dynamic \
+			--with-http_perl_module \
 			--with-http_random_index_module \
 			--with-http_secure_link_module \
 			--with-http_sub_module \
-			--with-http_xslt_module=dynamic \
-			--with-mail=dynamic \
+			--with-http_xslt_module \
+			--with-mail \
 			--with-mail_ssl_module \
-			--with-stream=dynamic \
-			--with-stream_geoip_module=dynamic \
+			--with-stream \
+			--with-stream_geoip_module \
 			--with-stream_ssl_module \
 			--with-stream_ssl_preread_module \
 			--add-module=$(SBMODULESDIR)/ngx_brotli \
 			--add-module=$(SBMODULESDIR)/zstd-nginx-module \
 			--add-module=$(SBMODULESDIR)/nginx-acme \
-			--add-dynamic-module=$(MODULESDIR)/http-headers-more-filter \
-			--add-dynamic-module=$(MODULESDIR)/http-auth-pam \
-			--add-dynamic-module=$(MODULESDIR)/http-cache-purge \
-			--add-dynamic-module=$(MODULESDIR)/http-dav-ext \
-			--add-dynamic-module=$(MODULESDIR)/http-ndk \
-			--add-dynamic-module=$(MODULESDIR)/http-echo \
-			--add-dynamic-module=$(MODULESDIR)/http-fancyindex \
-			--add-dynamic-module=$(MODULESDIR)/http-geoip2 \
-			--add-dynamic-module=$(SBMODULESDIR)/ngx_http_ipdb_module \
-			--add-dynamic-module=$(MODULESDIR)/nchan \
-			--add-dynamic-module=$(MODULESDIR)/http-lua \
-			--add-dynamic-module=$(MODULESDIR)/rtmp \
-			--add-dynamic-module=$(MODULESDIR)/http-uploadprogress \
-			--add-dynamic-module=$(MODULESDIR)/http-upstream-fair \
-			--add-dynamic-module=$(MODULESDIR)/http-subs-filter
+			--add-module=$(MODULESDIR)/http-headers-more-filter \
+			--add-module=$(MODULESDIR)/http-auth-pam \
+			--add-module=$(MODULESDIR)/http-cache-purge \
+			--add-module=$(MODULESDIR)/http-dav-ext \
+			--add-module=$(MODULESDIR)/http-ndk \
+			--add-module=$(MODULESDIR)/http-echo \
+			--add-module=$(MODULESDIR)/http-fancyindex \
+			--add-module=$(MODULESDIR)/http-geoip2 \
+			--add-module=$(SBMODULESDIR)/ngx_http_ipdb_module \
+			--add-module=$(MODULESDIR)/nchan \
+			--add-module=$(MODULESDIR)/http-lua \
+			--add-module=$(MODULESDIR)/rtmp \
+			--add-module=$(MODULESDIR)/http-uploadprogress \
+			--add-module=$(MODULESDIR)/http-upstream-fair \
+			--add-module=$(MODULESDIR)/http-subs-filter
 
 %:
 	dh $@ --without autoreconf
