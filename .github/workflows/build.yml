@@ -40,6 +40,8 @@ jobs:
             libperl-dev \
             libpam0g-dev \
             libluajit-5.1-dev \
+            libexpat1-dev \
+            libbrotli-dev \
             luajit \
             wget \
             ca-certificates
@@ -62,7 +64,7 @@ jobs:
           wget https://github.com/facebook/zstd/releases/download/v1.5.6/zstd-1.5.6.tar.gz
           tar xzf zstd-1.5.6.tar.gz
           mv zstd-1.5.6 zstd
-          cd zstd
+          cd zstd/lib
           make -j$(nproc) libzstd.a libzstd.so
 
       - name: Build Debian package

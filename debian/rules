@@ -14,8 +14,6 @@ DYN_MODS :=
 MODULESDIR = $(CURDIR)/debian/modules
 SBMODULESDIR = $(CURDIR)/sb-modules
 BASEDIR = $(CURDIR)
-export ZSTD_INC=$(CURDIR)/../zstd/lib
-export ZSTD_LIB=$(CURDIR)/../zstd/lib
 $(foreach flavour,$(FLAVOURS) src,$(eval BUILDDIR_$(flavour) = $(CURDIR)/debian/build-$(flavour)))
 
 DEB_BUILD_ARCH ?=$(shell dpkg-architecture -qDEB_BUILD_ARCH)
@@ -82,9 +80,7 @@ core_configure_flags := \
 			--with-http_addition_module \
 			--with-http_gunzip_module \
 			--with-http_gzip_static_module \
-			--with-http_sub_module \
-			--add-module=$(SBMODULESDIR)/ngx_brotli \
-			--add-module=$(SBMODULESDIR)/zstd-nginx-module
+			--with-http_sub_module
 
 extras_configure_flags := \
 			$(common_configure_flags) \
