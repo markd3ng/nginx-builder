@@ -21,7 +21,8 @@ ZLIB_VERSION="1.3.1"
 
 mkdir -p ${SRC_DIR} ${OUTPUT_DIR} ${INSTALL_DIR}
 
-# --- Helper Functions ---
+LOG_FILE="/build/build.log" # Optional, but stdout is fine.
+
 log() {
     echo -e "${BLUE}[BUILD]${NC} $1"
 }
@@ -32,6 +33,28 @@ get_latest_git_tag() {
     log "Finding latest tag for ${repo}..."
     git ls-remote --tags --refs --sort='v:refname' https://github.com/${repo}.git \
         | grep -oE "${filter}" | tail -n1
+}
+
+clean_download() {
+    local url=$1
+    local dir=$2
+    if [ -d "$dir" ]; then rm -rf "$dir"; fi
+    log "Downloading $dir from $url..."
+    case "$url" in
+        *.git)
+            git clone --depth 1 --recursive "$url" "$dir"
+            ;;
+        *)
+            wget -qO- "$url" | tar xz
+            # Handle tarball naming variations if needed
+            ;;
+    esac
+    
+    if [ ! -d "$dir" ]; then
+        log "${RED}ERROR: Failed to download $dir. Directory not found!${NC}"
+        ls -la
+        exit 1
+    fi
 }
 
 # --- 1. Resolve Versions ---
@@ -54,29 +77,6 @@ log "Target OpenSSL Version: ${GREEN}${OPENSSL_VERSION}${NC}"
 # --- 2. Download Sources ---
 cd ${SRC_DIR}
 
-clean_download() {
-    local url=$1
-    local dir=$2
-    if [ -d "$dir" ]; then rm -rf "$dir"; fi
-    log "Downloading $dir from $url..."
-    case "$url" in
-        *.git)
-            git clone --depth 1 --recursive "$url" "$dir"
-            ;;
-        *)
-            wget -qO- "$url" | tar xz
-            # Handle tarball naming variations if needed
-            ;;
-    esac
-    
-    # Verify download
-    if [ ! -d "$dir" ]; then
-        log "${RED}ERROR: Failed to download $dir. Directory not found!${NC}"
-        ls -la
-        exit 1
-    fi
-}
-
 # Core
 clean_download "https://github.com/nginx/nginx.git" "nginx" 
 # Switch nginx to specific tag
@@ -94,7 +94,10 @@ clean_download "https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION
 log "Downloading Modules..."
 clean_download "https://github.com/vision5/ngx_devel_kit.git" "ngx_devel_kit"
 clean_download "https://github.com/google/ngx_brotli.git" "ngx_brotli"
-clean_download "https://github.com/openresty/luajit2.git" "luajit2"
+
+# Renamed directory to avoid conflicts
+clean_download "https://github.com/openresty/luajit2.git" "luajit-src"
+
 clean_download "https://github.com/openresty/lua-nginx-module.git" "lua-nginx-module"
 clean_download "https://github.com/openresty/set-misc-nginx-module.git" "set-misc-nginx-module"
 clean_download "https://github.com/openresty/headers-more-nginx-module.git" "headers-more-nginx-module"
@@ -117,7 +120,12 @@ clean_download "https://github.com/openresty/lua-resty-lrucache.git" "lua-resty-
 
 # --- 3. Build LuaJIT (Static) ---
 log "Building LuaJIT..."
-cd ${SRC_DIR}/luajit2
+
+# --- DIAGNOSTICS ---
+log "Checking SRC_DIR content:"
+ls -la ${SRC_DIR}
+
+cd ${SRC_DIR}/luajit-src
 make -j$(nproc)
 make install # Installs to /usr/local
 export LUAJIT_LIB=/usr/local/lib
