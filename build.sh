@@ -141,7 +141,7 @@ cd ${SRC_DIR}/nginx
 # Disable strict error checking for deps that might have warnings
 export CFLAGS="-Wno-error" 
 
-./configure \
+./auto/configure \
     --prefix=/etc/nginx \
     --sbin-path=/usr/sbin/nginx \
     --modules-path=/usr/lib/nginx/modules \
