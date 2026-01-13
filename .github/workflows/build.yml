@@ -14,7 +14,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: debian:trixie
+      image: debian:bookworm
 
     steps:
       - name: Install build dependencies
@@ -26,7 +26,11 @@ jobs:
             devscripts \
             debhelper \
             quilt \
-            libpcre2-dev \
+            libpcre3-dev \
+            libhiredis-dev \
+            libmhash-dev \
+            libjson-c-dev \
+            po-debconf \
             zlib1g-dev \
             libssl-dev \
             libgd-dev \
