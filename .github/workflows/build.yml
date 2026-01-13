@@ -1,0 +1,87 @@
+name: Build Nginx Debian Package
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+    paths:
+      - 'debian/**'
+      - 'src/**'
+      - 'auto/**'
+      - '.github/workflows/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: debian:trixie
+
+    steps:
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          apt-get install -y \
+            git \
+            build-essential \
+            devscripts \
+            debhelper \
+            quilt \
+            libpcre3-dev \
+            zlib1g-dev \
+            libssl-dev \
+            libgd-dev \
+            libgeoip-dev \
+            libmaxminddb-dev \
+            libxslt1-dev \
+            libperl-dev \
+            libpam0g-dev \
+            libluajit-5.1-dev \
+            luajit \
+            wget \
+            ca-certificates
+
+      - name: Checkout nginx-source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Download and prepare OpenSSL
+        run: |
+          cd ..
+          wget https://github.com/openssl/openssl/releases/download/openssl-3.4.1/openssl-3.4.1.tar.gz
+          tar xzf openssl-3.4.1.tar.gz
+          mv openssl-3.4.1 openssl
+
+      - name: Download and prepare Zstd
+        run: |
+          cd ..
+          wget https://github.com/facebook/zstd/releases/download/v1.5.6/zstd-1.5.6.tar.gz
+          tar xzf zstd-1.5.6.tar.gz
+          mv zstd-1.5.6 zstd
+
+      - name: Build Debian package
+        run: |
+          dpkg-buildpackage -us -uc -b
+
+      - name: List built packages
+        run: |
+          ls -la ../*.deb
+
+      - name: Upload deb artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nginx-debs
+          path: ../*.deb
+          retention-days: 30
+
+      - name: Create Release
+        if: github.ref == 'refs/heads/master'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.run_number }}
+          name: Build ${{ github.run_number }}
+          files: ../*.deb
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
