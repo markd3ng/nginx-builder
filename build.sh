@@ -30,7 +30,8 @@ log() {
 get_latest_git_tag() {
     local repo=$1
     local filter=$2
-    log "Finding latest tag for ${repo}..."
+    # Redirect log to stderr so it doesn't pollute the captured stdout
+    log "Finding latest tag for ${repo}..." >&2
     git ls-remote --tags --refs --sort='v:refname' https://github.com/${repo}.git \
         | grep -oE "${filter}" | tail -n1
 }
