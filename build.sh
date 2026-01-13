@@ -58,12 +58,15 @@ clean_download() {
     local dir=$2
     if [ -d "$dir" ]; then rm -rf "$dir"; fi
     log "Downloading $dir from $url..."
-    if [[ "$url" == *.git ]]; then
-        git clone --depth 1 --recursive "$url" "$dir"
-    else
-        wget -qO- "$url" | tar xz
-        # Handle tarball naming variations if needed
-    fi
+    case "$url" in
+        *.git)
+            git clone --depth 1 --recursive "$url" "$dir"
+            ;;
+        *)
+            wget -qO- "$url" | tar xz
+            # Handle tarball naming variations if needed
+            ;;
+    esac
 }
 
 # Core

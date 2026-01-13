@@ -32,7 +32,7 @@ RUN chmod +x /build.sh
 
 # Execute Build
 # This script manages versions, downloads, and compilation
-RUN /build.sh
+RUN /bin/bash /build.sh
 
 # Export Stage
 # This allows 'docker build --output type=local,dest=.' to extract the tarball
