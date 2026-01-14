@@ -24,6 +24,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpcre2-dev \
     libssl-dev \
     zlib1g-dev \
+    libzstd-dev \
+    libxml2-dev \
     dos2unix \
     && rm -rf /var/lib/apt/lists/*
 
