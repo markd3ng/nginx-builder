@@ -25,6 +25,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        
+      - name: Resolve Nginx Version (Mainline)
+        id: nginx_version
+        run: |
+          # Resolve latest Mainline version (usually the latest tag)
+          TAG=$(git ls-remote --tags --refs --sort='v:refname' https://github.com/nginx/nginx.git | grep -oE "release-[0-9.]+" | tail -n1)
+          VERSION=${TAG#release-}
+          echo "Found Nginx Version: $VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
       
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -36,6 +46,7 @@ jobs:
         run: |
           docker buildx build \
             --platform ${{ matrix.platform }} \
+            --build-arg NGINX_VERSION=${{ env.VERSION }} \
             --output type=local,dest=./output \
             .
       
@@ -49,12 +60,52 @@ jobs:
           name: nginx-custom-${{ matrix.suffix }}
           path: ./output/*.tar.gz
           
-      - name: Publish to Release (Rolling)
-        # Only publish specific branches to prevent accidental releases from PRs
+      - name: Generate Checksums
         if: github.ref == 'refs/heads/master'
+        run: |
+          cd output
+          sha256sum *.tar.gz > sha256sums-${{ matrix.suffix }}.txt
+          cd ..
+          
+      - name: Upload Checksums
+        if: github.ref == 'refs/heads/master'
+        uses: actions/upload-artifact@v4
+        with:
+          name: sha256sums-${{ matrix.suffix }}
+          path: ./output/sha256sums-*.txt
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          
+      - name: Resolve Nginx Version (Again for Release)
+        id: nginx_version_release
+        run: |
+          TAG=$(git ls-remote --tags --refs --sort='v:refname' https://github.com/nginx/nginx.git | grep -oE "release-[0-9.]+" | tail -n1)
+          VERSION=${TAG#release-}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          
+      - name: Prepare Release Files
+        run: |
+          mkdir release_files
+          find artifacts -name "*.tar.gz" -exec cp {} release_files/ \;
+          
+          # Merge checksums
+          cd release_files
+          sha256sum *.tar.gz > sha256sums.txt
+          cat sha256sums.txt
+          
+      - name: Publish Release (Dynamic Tag)
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: rolling
-          files: ./output/*.tar.gz
-          prerelease: true
+          tag_name: nginx-mainline-mk/${{ env.VERSION }}
+          name: Nginx Mainline MK ${{ env.VERSION }}
+          files: release_files/*
+          prerelease: false
           fail_on_unmatched_files: true

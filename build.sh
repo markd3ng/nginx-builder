@@ -141,6 +141,10 @@ cd ${SRC_DIR}/nginx
 # Disable strict error checking for deps that might have warnings
 export CFLAGS="-Wno-error" 
 
+# Customize Server Header
+log "Customizing Server Header to nginx-mainline-mk..."
+sed -i 's|"nginx/"|"nginx-mainline-mk/"|g' src/core/nginx.h 
+
 ./auto/configure \
     --prefix=/etc/nginx \
     --sbin-path=/usr/sbin/nginx \

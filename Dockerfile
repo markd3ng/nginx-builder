@@ -35,6 +35,8 @@ RUN dos2unix /build.sh && chmod +x /build.sh
 
 # Execute Build
 # This script manages versions, downloads, and compilation
+ARG NGINX_VERSION
+ENV NGINX_VERSION=${NGINX_VERSION}
 RUN /bin/bash /build.sh
 
 # Export Stage
