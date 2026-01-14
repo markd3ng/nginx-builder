@@ -115,7 +115,7 @@ clean_download "https://github.com/sto/ngx_http_auth_pam_module.git" "ngx_http_a
 clean_download "https://github.com/nginx-modules/ngx_cache_purge.git" "ngx_cache_purge"
 clean_download "https://github.com/arut/nginx-dav-ext-module.git" "nginx-dav-ext-module"
 clean_download "https://github.com/masterzen/nginx-upload-progress-module.git" "nginx-upload-progress-module"
-clean_download "https://github.com/gnosek/nginx-upstream-fair.git" "nginx-upstream-fair"
+# nginx-upstream-fair removed: incompatible with nginx 1.29.x (uses removed default_port member)
 
 # Lua Libs
 clean_download "https://github.com/openresty/lua-resty-core.git" "lua-resty-core"
@@ -202,7 +202,6 @@ export CFLAGS="-Wno-error"
     --add-module=${SRC_DIR}/ngx_cache_purge \
     --add-module=${SRC_DIR}/nginx-dav-ext-module \
     --add-module=${SRC_DIR}/nginx-upload-progress-module \
-    --add-module=${SRC_DIR}/nginx-upstream-fair \
     --add-module=${SRC_DIR}/lua-nginx-module
 
 log "Compiling Nginx..."
