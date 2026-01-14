@@ -215,6 +215,15 @@ mkdir -p ${LUA_LIB_DIR}
 cp -r ${SRC_DIR}/lua-resty-core/lib/* ${LUA_LIB_DIR}/
 cp -r ${SRC_DIR}/lua-resty-lrucache/lib/* ${LUA_LIB_DIR}/
 
+# Copy LuaJIT shared libraries to package
+log "Copying LuaJIT libraries..."
+mkdir -p ${INSTALL_DIR}/usr/local/lib
+cp -a /usr/local/lib/libluajit* ${INSTALL_DIR}/usr/local/lib/
+
+# Create ldconfig configuration
+mkdir -p ${INSTALL_DIR}/etc/ld.so.conf.d
+echo "/usr/local/lib" > ${INSTALL_DIR}/etc/ld.so.conf.d/luajit.conf
+
 # Verify (skipped - binary may not run in build container due to dynamic lib paths)
 # Final verification should be done in the deployment image
 log "Skipping runtime verification (will verify in deployment)..."
