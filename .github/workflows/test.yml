@@ -83,12 +83,12 @@ jobs:
       - name: Verify Compiled Modules
         id: modules_check
         run: |
-          # The file is now downloaded as a separate artifact file in the root directory
-          EXPECTED_FILE="./expected_modules.txt"
+          # Find the file wherever it is (root or output/ subdir)
+          EXPECTED_FILE=$(find . -name "expected_modules.txt" | head -n 1)
           
-          if [ ! -f "$EXPECTED_FILE" ]; then
-             echo "⚠️ No expected_modules.txt found (checked at $EXPECTED_FILE). Skipping module check."
-             ls -la
+          if [ -z "$EXPECTED_FILE" ]; then
+             echo "⚠️ No expected_modules.txt found in artifact."
+             ls -R
              echo "status=skipped" >> $GITHUB_OUTPUT
              echo "Skipped (File not found)" > modules_report.txt
              exit 0
