@@ -53,12 +53,12 @@ jobs:
       
       - name: Rename Artifact
         run: |
-          mv ./output/nginx-custom.tar.gz ./output/nginx-mainline-mk-${{ env.VERSION }}-linux-${{ matrix.suffix }}.tar.gz
+          mv ./output/nginx-custom.tar.gz ./output/nginx-mainline-mk-${{ env.VERSION }}-${{ github.event.workflow_run.run_number }}-linux-${{ matrix.suffix }}.tar.gz
           
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: nginx-mainline-mk-${{ env.VERSION }}-${{ matrix.suffix }}
+          name: nginx-mainline-mk-${{ env.VERSION }}-${{ github.event.workflow_run.run_number }}-${{ matrix.suffix }}
           path: ./output/*.tar.gz
           
       - name: Generate Checksums
@@ -102,8 +102,8 @@ jobs:
       - name: Publish Release (Append ARM64)
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: nginx-mainline-mk/${{ env.VERSION }}
-          name: Nginx Mainline MK ${{ env.VERSION }}
+          tag_name: nginx-mainline-mk/${{ env.VERSION }}-${{ github.event.workflow_run.run_number }}
+          name: Nginx Mainline MK ${{ env.VERSION }} Build ${{ github.event.workflow_run.run_number }}
           files: release_files/*
           prerelease: false
           fail_on_unmatched_files: true

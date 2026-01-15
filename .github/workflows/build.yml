@@ -57,12 +57,12 @@ jobs:
       
       - name: Rename Artifact
         run: |
-          mv ./output/nginx-custom.tar.gz ./output/nginx-mainline-mk-${{ env.VERSION }}-linux-${{ matrix.suffix }}.tar.gz
+          mv ./output/nginx-custom.tar.gz ./output/nginx-mainline-mk-${{ env.VERSION }}-${{ github.run_number }}-linux-${{ matrix.suffix }}.tar.gz
           
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: nginx-mainline-mk-${{ env.VERSION }}-${{ matrix.suffix }}
+          name: nginx-mainline-mk-${{ env.VERSION }}-${{ github.run_number }}-${{ matrix.suffix }}
           path: ./output/*.tar.gz
           
       - name: Generate Checksums
@@ -84,7 +84,7 @@ jobs:
     if: github.ref == 'refs/heads/master'
     uses: ./.github/workflows/test.yml
     with:
-      version: ${{ needs.build.outputs.version }}
+      version: ${{ needs.build.outputs.version }}-${{ github.run_number }}
       issue_number: "1"
     secrets: inherit
 
@@ -101,14 +101,6 @@ jobs:
       - name: Resolve Nginx Version (Again for Release)
         id: nginx_version_release
         run: |
-          # Reuse version from build output if possible, but easier to resolve again or pass it down. 
-          # Or since we have artifacts, we can assume artifacts are correct.
-          # Re-resolving to keep it simple as in previous step, or better, use needs.build.outputs.version if passed to this job.
-          # Here we re-resolve for simplicity in this context without changing job inputs too much, 
-          # BUT we must ensure safety. 
-          # Better: use the artifact version mapping.
-          
-          # Let's re-resolve for now as it's consistent within short timeframe.
           TAG=$(git ls-remote --tags --refs --sort='v:refname' https://github.com/nginx/nginx.git | grep -oE "release-[0-9.]+" | tail -n1)
           VERSION=${TAG#release-}
           echo "VERSION=$VERSION" >> $GITHUB_ENV
@@ -125,8 +117,8 @@ jobs:
       - name: Publish Release (Dynamic Tag)
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: nginx-mainline-mk/${{ env.VERSION }}
-          name: Nginx Mainline MK ${{ env.VERSION }}
+          tag_name: nginx-mainline-mk/${{ env.VERSION }}-${{ github.run_number }}
+          name: Nginx Mainline MK ${{ env.VERSION }} Build ${{ github.run_number }}
           files: release_files/*
           prerelease: false
           fail_on_unmatched_files: true
