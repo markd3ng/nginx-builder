@@ -112,6 +112,8 @@ jobs:
           mkdir release_files
           find artifacts -name "*.tar.gz" -exec cp {} release_files/ \;
           find artifacts -name "sha256sums-*.txt" -exec cp {} release_files/ \;
+          # Copy expected_modules.txt (take the first one found, they should be identical)
+          find artifacts -name "expected_modules.txt" | head -n 1 | xargs -I {} cp {} release_files/
           
           # No merging of checksums anymore, we keep separate files for amd64 and arm64
           ls -l release_files/
