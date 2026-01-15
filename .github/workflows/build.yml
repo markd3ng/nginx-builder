@@ -9,6 +9,8 @@ on:
 
 permissions:
   contents: write # Needed for creating releases
+  issues: write   # Needed for test reporting
+  pull-requests: write # Needed for test reporting on PRs
 
 env:
   TEST_REPORT_ISSUE: "1"
