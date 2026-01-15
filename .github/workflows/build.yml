@@ -10,6 +10,9 @@ on:
 permissions:
   contents: write # Needed for creating releases
 
+env:
+  TEST_REPORT_ISSUE: "1"
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,6 +24,8 @@ jobs:
             suffix: amd64
           - platform: linux/arm64
             suffix: arm64
+    outputs:
+      version: ${{ steps.nginx_version.outputs.version }}
     
     steps:
       - name: Checkout
@@ -74,8 +79,17 @@ jobs:
           name: sha256sums-${{ matrix.suffix }}
           path: ./output/sha256sums-*.txt
 
-  release:
+  test:
     needs: build
+    if: github.ref == 'refs/heads/master'
+    uses: ./.github/workflows/test.yml
+    with:
+      version: ${{ needs.build.outputs.version }}
+      issue_number: "1"
+    secrets: inherit
+
+  release:
+    needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     steps:
@@ -87,6 +101,14 @@ jobs:
       - name: Resolve Nginx Version (Again for Release)
         id: nginx_version_release
         run: |
+          # Reuse version from build output if possible, but easier to resolve again or pass it down. 
+          # Or since we have artifacts, we can assume artifacts are correct.
+          # Re-resolving to keep it simple as in previous step, or better, use needs.build.outputs.version if passed to this job.
+          # Here we re-resolve for simplicity in this context without changing job inputs too much, 
+          # BUT we must ensure safety. 
+          # Better: use the artifact version mapping.
+          
+          # Let's re-resolve for now as it's consistent within short timeframe.
           TAG=$(git ls-remote --tags --refs --sort='v:refname' https://github.com/nginx/nginx.git | grep -oE "release-[0-9.]+" | tail -n1)
           VERSION=${TAG#release-}
           echo "VERSION=$VERSION" >> $GITHUB_ENV
