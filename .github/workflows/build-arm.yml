@@ -1,4 +1,4 @@
-name: Nginx Builder
+name: Nginx Builder (ARM64)
 
 on:
   push:
@@ -9,21 +9,16 @@ on:
 
 permissions:
   contents: write # Needed for creating releases
-  issues: write   # Needed for test reporting
-  pull-requests: write # Needed for test reporting on PRs
-
-env:
-  TEST_REPORT_ISSUE: "1"
 
 jobs:
-  build:
+  build-arm:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - platform: linux/amd64
-            suffix: amd64
+          - platform: linux/arm64
+            suffix: arm64
     outputs:
       version: ${{ steps.nginx_version.outputs.version }}
     
@@ -79,17 +74,8 @@ jobs:
           name: sha256sums-${{ matrix.suffix }}
           path: ./output/sha256sums-*.txt
 
-  test:
-    needs: build
-    if: github.ref == 'refs/heads/master'
-    uses: ./.github/workflows/test.yml
-    with:
-      version: ${{ needs.build.outputs.version }}
-      issue_number: "1"
-    secrets: inherit
-
-  release:
-    needs: test
+  release-arm:
+    needs: build-arm
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     steps:
@@ -101,14 +87,6 @@ jobs:
       - name: Resolve Nginx Version (Again for Release)
         id: nginx_version_release
         run: |
-          # Reuse version from build output if possible, but easier to resolve again or pass it down. 
-          # Or since we have artifacts, we can assume artifacts are correct.
-          # Re-resolving to keep it simple as in previous step, or better, use needs.build.outputs.version if passed to this job.
-          # Here we re-resolve for simplicity in this context without changing job inputs too much, 
-          # BUT we must ensure safety. 
-          # Better: use the artifact version mapping.
-          
-          # Let's re-resolve for now as it's consistent within short timeframe.
           TAG=$(git ls-remote --tags --refs --sort='v:refname' https://github.com/nginx/nginx.git | grep -oE "release-[0-9.]+" | tail -n1)
           VERSION=${TAG#release-}
           echo "VERSION=$VERSION" >> $GITHUB_ENV
@@ -118,11 +96,9 @@ jobs:
           mkdir release_files
           find artifacts -name "*.tar.gz" -exec cp {} release_files/ \;
           find artifacts -name "sha256sums-*.txt" -exec cp {} release_files/ \;
-          
-          # No merging of checksums anymore, we keep separate files for amd64 and arm64
           ls -l release_files/
           
-      - name: Publish Release (Dynamic Tag)
+      - name: Publish Release (Append ARM64)
         uses: softprops/action-gh-release@v1
         with:
           tag_name: nginx-mainline-mk/${{ env.VERSION }}
@@ -130,3 +106,5 @@ jobs:
           files: release_files/*
           prerelease: false
           fail_on_unmatched_files: true
+          # append_body: true # Optional: append to existing release body if needed, but not strictly required for asset upload
+          # action-gh-release defaults to updating existing releases
