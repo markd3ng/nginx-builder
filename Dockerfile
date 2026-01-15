@@ -43,3 +43,4 @@ RUN /bin/bash /build.sh
 # This allows 'docker build --output type=local,dest=.' to extract the tarball
 FROM scratch AS export
 COPY --from=builder /build/output/nginx-custom.tar.gz /
+COPY --from=builder /build/output/expected_modules.txt /
