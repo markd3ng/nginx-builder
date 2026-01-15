@@ -227,6 +227,28 @@ cp -a /usr/local/lib/libluajit* ${INSTALL_DIR}/usr/local/lib/
 # Create ldconfig configuration
 mkdir -p ${INSTALL_DIR}/etc/ld.so.conf.d
 echo "/usr/local/lib" > ${INSTALL_DIR}/etc/ld.so.conf.d/luajit.conf
+mkdir -p ${INSTALL_DIR}/etc/nginx/modules
+
+# Generate list of expected modules for testing
+log "Generating expected_modules.txt..."
+cat <<EOF > ${INSTALL_DIR}/etc/nginx/modules/expected_modules.txt
+ngx_devel_kit
+ngx_brotli
+set-misc-nginx-module
+headers-more-nginx-module
+zstd-nginx-module
+ngx_http_geoip2_module
+echo-nginx-module
+nchan
+nginx-rtmp-module
+ngx-fancyindex
+ngx_http_substitutions_filter_module
+ngx_http_auth_pam_module
+ngx_cache_purge
+nginx-dav-ext-module
+nginx-upload-progress-module
+lua-nginx-module
+EOF
 
 # Verify (skipped - binary may not run in build container due to dynamic lib paths)
 # Final verification should be done in the deployment image

@@ -80,6 +80,62 @@ jobs:
             echo "status=failure" >> $GITHUB_OUTPUT
           fi
 
+      - name: Verify Compiled Modules
+        id: modules_check
+        run: |
+          EXPECTED_FILE="/etc/nginx/modules/expected_modules.txt"
+          
+          if sudo [ ! -f "$EXPECTED_FILE" ]; then
+             echo "⚠️ No expected_modules.txt found. Skipping module check."
+             echo "status=skipped" >> $GITHUB_OUTPUT
+             echo "Skipped (File not found)" > modules_report.txt
+             exit 0
+          fi
+          
+          echo "Checking modules against: $EXPECTED_FILE"
+          FAILURES=0
+          
+          # Capture nginx -V output once
+          NGINX_V=$(/usr/sbin/nginx -V 2>&1)
+          MODULES_REPORT=""
+          
+          while read -r MODULE; do
+            [[ "$MODULE" =~ ^#.* ]] && continue 
+            [ -z "$MODULE" ] && continue 
+            
+            # Clean module name just in case
+            MODULE=$(echo "$MODULE" | tr -d '\r')
+            
+            if echo "$NGINX_V" | grep -q "$MODULE"; then
+              echo "✅ Module $MODULE found"
+              MODULES_REPORT+="- ✅ $MODULE\n"
+            else
+              echo "❌ Module $MODULE MISSING"
+              MODULES_REPORT+="- ❌ $MODULE MISSING\n"
+              FAILURES=$((FAILURES+1))
+            fi
+          done < <(sudo cat "$EXPECTED_FILE")
+          
+          echo -e "$MODULES_REPORT" > modules_report.txt
+          
+          if [ "$FAILURES" -gt 0 ]; then
+             echo "Found $FAILURES missing modules!"
+             echo "status=failure" >> $GITHUB_OUTPUT
+             # We want to catch this in the report, so don't exit 1 comfortably here, 
+             # wait for the reporting step to handle valid logic, or exit 1 to fail the job immediately?
+             # User probably wants to fail the job if modules are missing. 
+             # But let's allow report generation first? No, fail fast or fail at end.
+             # Current pattern is report generation handles failures.
+             # However, we need 'continue-on-error: true' or 'if: always()' in report generation.
+             # Given report generation is 'if: always()', we can exit 1 here BUT then we need 
+             # to make sure report step still runs. 
+             # Actually, if we exit 1, the step fails, outcome becomes 'failure'.
+             # The next step 'Generate Report' has 'if: always()', so it will run.
+             exit 1 
+          else
+             echo "status=success" >> $GITHUB_OUTPUT
+          fi
+
       - name: Generate Report
         if: always()
         run: |
@@ -87,10 +143,12 @@ jobs:
           INSTALL_STATUS="${{ steps.install.outcome == 'success' && '✅ PASS' || '❌ FAIL' }}"
           VERSION_STATUS="${{ steps.version_check.outcome == 'success' && '✅ PASS' || '❌ FAIL' }}"
           HEADER_STATUS="${{ steps.server_header.outcome == 'success' && '✅ PASS' || '❌ FAIL' }}"
+          MODULES_STATUS="${{ steps.modules_check.outcome == 'success' && '✅ PASS' || (steps.modules_check.outcome == 'skipped' && '⚠️ SKIP' || '❌ FAIL') }}"
           
           if [ "${{ steps.install.outcome }}" == "success" ] && \
              [ "${{ steps.version_check.outcome }}" == "success" ] && \
-             [ "${{ steps.server_header.outcome }}" == "success" ]; then
+             [ "${{ steps.server_header.outcome }}" == "success" ] && \
+             ( [ "${{ steps.modules_check.outcome }}" == "success" ] || [ "${{ steps.modules_check.outcome }}" == "skipped" ] ); then
              STATUS="✅ 通过"
              EMOJI="🎉"
           else
@@ -117,8 +175,15 @@ jobs:
           | 安装与解压 | $INSTALL_STATUS |
           | 版本检查 (nginx -V) | $VERSION_STATUS |
           | Server 头验证 | $HEADER_STATUS |
+          | 关键模块校验 | $MODULES_STATUS |
           
           ## 🔧 详细信息
+          ### 模块检查详情
+          \`\`\`
+          $(cat modules_report.txt 2>/dev/null || echo "N/A")
+          \`\`\`
+
+          ### Nginx Info
           \`\`\`
           $(cat nginx_info.txt 2>/dev/null || echo "N/A")
           \`\`\`
@@ -139,6 +204,7 @@ jobs:
           path: |
              test_report.md
              nginx_info.txt
+             modules_report.txt
 
       - name: Comment on Issue
         if: always() && inputs.issue_number != ''
