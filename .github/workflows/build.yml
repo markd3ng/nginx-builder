@@ -63,7 +63,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nginx-mainline-mk-${{ env.VERSION }}-${{ github.run_number }}-${{ matrix.suffix }}
-          path: ./output/*.tar.gz
+          path: |
+            ./output/*.tar.gz
+            ./output/expected_modules.txt
           
       - name: Generate Checksums
         if: github.ref == 'refs/heads/master'

@@ -227,11 +227,9 @@ cp -a /usr/local/lib/libluajit* ${INSTALL_DIR}/usr/local/lib/
 # Create ldconfig configuration
 mkdir -p ${INSTALL_DIR}/etc/ld.so.conf.d
 echo "/usr/local/lib" > ${INSTALL_DIR}/etc/ld.so.conf.d/luajit.conf
-mkdir -p ${INSTALL_DIR}/etc/nginx/modules
-
-# Generate list of expected modules for testing
+# Generate list of expected modules for testing (Artifact, not inside tarball)
 log "Generating expected_modules.txt..."
-cat <<EOF > ${INSTALL_DIR}/etc/nginx/modules/expected_modules.txt
+cat <<EOF > ${OUTPUT_DIR}/expected_modules.txt
 http_ssl_module
 http_v2_module
 http_v3_module

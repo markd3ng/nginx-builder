@@ -83,10 +83,12 @@ jobs:
       - name: Verify Compiled Modules
         id: modules_check
         run: |
-          EXPECTED_FILE="/etc/nginx/modules/expected_modules.txt"
+          # The file is now downloaded as a separate artifact file in the root directory
+          EXPECTED_FILE="./expected_modules.txt"
           
-          if sudo [ ! -f "$EXPECTED_FILE" ]; then
-             echo "⚠️ No expected_modules.txt found. Skipping module check."
+          if [ ! -f "$EXPECTED_FILE" ]; then
+             echo "⚠️ No expected_modules.txt found (checked at $EXPECTED_FILE). Skipping module check."
+             ls -la
              echo "status=skipped" >> $GITHUB_OUTPUT
              echo "Skipped (File not found)" > modules_report.txt
              exit 0
@@ -114,23 +116,13 @@ jobs:
               MODULES_REPORT+="- ❌ $MODULE MISSING\n"
               FAILURES=$((FAILURES+1))
             fi
-          done < <(sudo cat "$EXPECTED_FILE")
+          done < "$EXPECTED_FILE"
           
           echo -e "$MODULES_REPORT" > modules_report.txt
           
           if [ "$FAILURES" -gt 0 ]; then
              echo "Found $FAILURES missing modules!"
              echo "status=failure" >> $GITHUB_OUTPUT
-             # We want to catch this in the report, so don't exit 1 comfortably here, 
-             # wait for the reporting step to handle valid logic, or exit 1 to fail the job immediately?
-             # User probably wants to fail the job if modules are missing. 
-             # But let's allow report generation first? No, fail fast or fail at end.
-             # Current pattern is report generation handles failures.
-             # However, we need 'continue-on-error: true' or 'if: always()' in report generation.
-             # Given report generation is 'if: always()', we can exit 1 here BUT then we need 
-             # to make sure report step still runs. 
-             # Actually, if we exit 1, the step fails, outcome becomes 'failure'.
-             # The next step 'Generate Report' has 'if: always()', so it will run.
              exit 1 
           else
              echo "status=success" >> $GITHUB_OUTPUT
