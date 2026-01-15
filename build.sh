@@ -232,6 +232,13 @@ mkdir -p ${INSTALL_DIR}/etc/nginx/modules
 # Generate list of expected modules for testing
 log "Generating expected_modules.txt..."
 cat <<EOF > ${INSTALL_DIR}/etc/nginx/modules/expected_modules.txt
+http_ssl_module
+http_v2_module
+http_v3_module
+stream_ssl_module
+http_gzip_static_module
+http_realip_module
+http_stub_status_module
 ngx_devel_kit
 ngx_brotli
 set-misc-nginx-module
