@@ -52,12 +52,12 @@ jobs:
       
       - name: Rename Artifact
         run: |
-          mv ./output/nginx-custom.tar.gz ./output/nginx-custom-linux-${{ matrix.suffix }}.tar.gz
+          mv ./output/nginx-custom.tar.gz ./output/nginx-mainline-mk-${{ env.VERSION }}-linux-${{ matrix.suffix }}.tar.gz
           
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: nginx-custom-${{ matrix.suffix }}
+          name: nginx-mainline-mk-${{ env.VERSION }}-${{ matrix.suffix }}
           path: ./output/*.tar.gz
           
       - name: Generate Checksums
