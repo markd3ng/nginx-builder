@@ -1,0 +1,46 @@
+name: Clear All Caches
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "yes" to confirm deletion of all caches'
+        required: true
+        default: 'yes'
+
+jobs:
+  clear-cache:
+    name: Delete All Caches
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Confirm
+        if: inputs.confirm != 'yes'
+        run: |
+          echo "Confirmation not received. Exiting."
+          exit 1
+
+      - name: Delete All Caches
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Fetching all caches..."
+          
+          # Get all cache keys
+          CACHES=$(gh api repos/${{ github.repository }}/actions/caches --paginate -q '.actions_caches[].id')
+          
+          if [ -z "$CACHES" ]; then
+            echo "No caches found."
+            exit 0
+          fi
+          
+          COUNT=$(echo "$CACHES" | wc -l)
+          echo "Found $COUNT caches. Deleting..."
+          
+          for CACHE_ID in $CACHES; do
+            echo "Deleting cache ID: $CACHE_ID"
+            gh api --method DELETE repos/${{ github.repository }}/actions/caches/$CACHE_ID || true
+          done
+          
+          echo "✅ All caches deleted!"
