@@ -24,6 +24,8 @@ jobs:
         include:
           - platform: linux/amd64
             suffix: amd64
+          - platform: linux/arm64
+            suffix: arm64
     outputs:
       version: ${{ steps.nginx_version.outputs.version }}
     
