@@ -190,6 +190,7 @@ sed -i 's|"nginx/"|"nginx-mainline-mk/"|g' src/core/nginx.h
     --with-ld-opt="-Wl,-z,relro -Wl,-z,now -Wl,--as-needed -pie" \
     --with-openssl=${SRC_DIR}/openssl \
     --with-pcre=${SRC_DIR}/pcre2-${PCRE2_VERSION} \
+    --with-pcre-jit \
     --with-zlib=${SRC_DIR}/zlib-${ZLIB_VERSION} \
     --add-module=${SRC_DIR}/ngx_devel_kit \
     --add-module=${SRC_DIR}/ngx_brotli \
